@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { 
   BookOpen, 
   Clock, 
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { Thesis, DosenProfile, ChapterStage } from '../../types/index.ts';
 import { UserAvatar } from '../common/UserAvatar.tsx';
+import { CHAPTER_ORDER } from '../../utils/rules.ts';
 
 interface PersonalDashboardProps {
   thesis: Thesis;
@@ -51,6 +52,40 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
   const attendances = thesis.attendances || [];
   const verifiedAttendances = attendances.filter(a => a.status === 'Hadir (Diverifikasi)');
 
+  // LOGIKA PINTAR: Update status Milestone secara Real-time berdasarkan thesis.currentChapter
+  const dynamicMilestones = useMemo(() => {
+    const currentChapterIndex = CHAPTER_ORDER.indexOf(thesis.currentChapter);
+    
+    return thesis.milestones.map((milestone) => {
+      // Bandingkan bab pada milestone dengan bab mahasiswa saat ini
+      const milestoneChapterIndex = CHAPTER_ORDER.indexOf(milestone.expectedChapter);
+      
+      let isCompleted = false;
+      let isCurrent = false;
+
+      // Jika bab saat ini berada lebih tinggi dari bab pada milestone, berarti sudah selesai (ACC)
+      if (currentChapterIndex > milestoneChapterIndex) {
+        isCompleted = true;
+      } 
+      // Jika sama persis, berarti sedang berjalan (Warna Biru)
+      else if (currentChapterIndex === milestoneChapterIndex) {
+        isCurrent = true;
+      }
+
+      // Khusus untuk Pasca Sidang
+      if (milestone.expectedChapter === 'Pasca Sidang' && thesis.currentChapter === 'Pasca Sidang') {
+        isCurrent = true;
+        isCompleted = false;
+      }
+
+      return {
+        ...milestone,
+        isCompleted,
+        isCurrent
+      };
+    });
+  }, [thesis.currentChapter, thesis.milestones]);
+
   return (
     <div className="space-y-6">
       {/* Alert if default password needs change */}
@@ -69,7 +104,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
           </div>
           <button
             onClick={onRequestChangePassword}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition self-start sm:self-auto shrink-0"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition self-start sm:self-auto shrink-0 cursor-pointer"
           >
             <KeyRound className="h-3.5 w-3.5" />
             <span>Ganti Password Sekarang</span>
@@ -134,7 +169,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                 <button
                   type="button"
                   onClick={onRequestEditProfile}
-                  className="inline-flex items-center gap-1 ml-1 px-2.5 py-0.5 rounded-lg bg-indigo-500/30 hover:bg-indigo-500/50 text-indigo-200 border border-indigo-400/40 text-[11px] font-sans font-bold transition"
+                  className="inline-flex items-center gap-1 ml-1 px-2.5 py-0.5 rounded-lg bg-indigo-500/30 hover:bg-indigo-500/50 text-indigo-200 border border-indigo-400/40 text-[11px] font-sans font-bold transition cursor-pointer"
                   title="Perbarui data profil lengkap mahasiswa"
                 >
                   <Edit3 className="h-3 w-3" />
@@ -197,7 +232,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
 
           <button
             onClick={onRequestChangeTitle}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-semibold border border-slate-700 transition self-start shrink-0"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-semibold border border-slate-700 transition self-start shrink-0 cursor-pointer"
             title="Ajukan perubahan judul jika terdapat instruksi revisi mayor dosen"
           >
             <Edit3 className="h-3.5 w-3.5 text-indigo-400" />
@@ -269,7 +304,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
           <div className="shrink-0 flex items-center gap-2">
             <button
               onClick={onOpenUploadSK}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition cursor-pointer ${
                 thesis.skStatus === 'Sudah SK'
                   ? 'bg-white hover:bg-slate-100 text-blue-700 border border-blue-200'
                   : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
@@ -375,21 +410,21 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => onNavigateTab('attendance')}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition cursor-pointer"
             >
               <ClipboardCheck className="h-3.5 w-3.5" />
               <span>Presensi Bimbingan</span>
             </button>
             <button
               onClick={() => onNavigateTab('update')}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition cursor-pointer"
             >
               <FileEdit className="h-3.5 w-3.5" />
               <span>{thesis.graduationTrack === 'Jurnal' ? 'Update Status Jurnal' : 'Update Progres Bab'}</span>
             </button>
             <button
               onClick={() => onNavigateTab('logs')}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer"
             >
               <History className="h-3.5 w-3.5" />
               <span>Log Bimbingan ({thesis.logs.length})</span>
@@ -397,10 +432,10 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
           </div>
         </div>
 
-        {/* Milestone Steps Timeline */}
+        {/* MENGGUNAKAN LOGIKA PINTAR dynamicMilestones */}
         <div className="relative pt-4 pb-2">
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 relative">
-            {thesis.milestones.map((milestone) => {
+            {dynamicMilestones.map((milestone) => {
               const isPast = milestone.isCompleted;
               const isCurrent = milestone.isCurrent;
               
@@ -465,7 +500,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
           <div>
             <span className="font-bold text-slate-800">Evaluasi Posisi Progres Anda:</span>
             <span className="text-slate-600 ml-1">
-              Saat ini Anda berada pada <strong>Bulan ke-{currentMonthRounded}</strong> dengan tahap <strong>{thesis.currentChapter}</strong>.
+              Saat ini Anda berada pada tahapan <strong>{thesis.currentChapter}</strong>.
               Target standar kelulusan adalah 6 bulan.
               {thesis.riskLevel === 'Aman' && ' Progres penulisan dan eksperimen berjalan lancar sesuai target roadmap. Pertahankan konsistensi konsultasi berkala di Informatika UMM!'}
               {thesis.riskLevel === 'Waspada' && ' Peringatan: Durasi bimbingan mulai mendekati batas toleransi bab ini. Disarankan segera menyelesaikan naskah bab saat ini.'}

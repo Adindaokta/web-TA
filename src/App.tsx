@@ -5,37 +5,37 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Filter, RotateCcw, ShieldCheck, Users, Edit3, Award, Clock, MapPin, Building2, Mail, Phone } from 'lucide-react';
-import { UserRole, Thesis, ChapterStage, LogStatus, NewApplicant, TitleChangeRequest, AttendanceRecord, DosenProfile, AuthSession } from './types/index.ts';
-import { CURRENT_DOSEN, INITIAL_THESES, INITIAL_APPLICANTS, standardMilestones } from './data/mockData.ts';
-import { calculateRiskLevel, extractAngkatan } from './utils/rules.ts';
-import { Header } from './components/Header.tsx';
-import { SummaryCards } from './components/dosen/SummaryCards.tsx';
-import { BottleneckChart } from './components/dosen/BottleneckChart.tsx';
-import { RiskScatterPlot } from './components/dosen/RiskScatterPlot.tsx';
-import { DistributionCharts } from './components/dosen/DistributionCharts.tsx';
-import { MonthlyGuidanceTrendChart } from './components/dosen/MonthlyGuidanceTrendChart.tsx';
-import { ResearchClustersView } from './components/dosen/ResearchClustersView.tsx';
-import { ProgressTableView } from './components/dosen/ProgressTableView.tsx';
-import { ReviewModal } from './components/dosen/ReviewModal.tsx';
-import { VerifySKModal } from './components/dosen/VerifySKModal.tsx';
-import { EditDosenProfileModal } from './components/dosen/EditDosenProfileModal.tsx';
-import { ApplicantManagementView } from './components/dosen/ApplicantManagementView.tsx';
-import { AttendanceManagementView } from './components/dosen/AttendanceManagementView.tsx';
-import { PersonalDashboard } from './components/mahasiswa/PersonalDashboard.tsx';
-import { AttendanceView } from './components/mahasiswa/AttendanceView.tsx';
-import { UpdateProgressForm } from './components/mahasiswa/UpdateProgressForm.tsx';
-import { LogBimbinganView } from './components/mahasiswa/LogBimbinganView.tsx';
-import { ChangeTitleModal } from './components/mahasiswa/ChangeTitleModal.tsx';
-import { ChangePasswordModal } from './components/mahasiswa/ChangePasswordModal.tsx';
-import { UploadSKModal } from './components/mahasiswa/UploadSKModal.tsx';
-import { ApplyGuidanceModal } from './components/public/ApplyGuidanceModal.tsx';
-import { EditProfileModal, StudentProfileUpdatePayload } from './components/mahasiswa/EditProfileModal.tsx';
-import { LoginScreen } from './components/auth/LoginScreen.tsx';
-
-const LOCAL_STORAGE_KEY_AUTH = 'skripsitrack_auth_session_strict_v2';
-const LOCAL_STORAGE_KEY_DOSEN = 'skripsitrack_dosen_profile_syaifuddin_v2';
-const LOCAL_STORAGE_KEY_THESES = 'skripsitrack_theses_syaifuddin_v14_prod';
-const LOCAL_STORAGE_KEY_APPLICANTS = 'skripsitrack_applicants_syaifuddin_v14_prod';
+import { UserRole, Thesis, ChapterStage, LogStatus, NewApplicant, TitleChangeRequest, AttendanceRecord, DosenProfile, AuthSession } from './types/index';
+import { CURRENT_DOSEN, INITIAL_THESES, INITIAL_APPLICANTS, standardMilestones } from './data/mockData';
+import { calculateRiskLevel, extractAngkatan } from './utils/rules';
+import { Header } from './components/Header';
+import { SummaryCards } from './components/dosen/SummaryCards';
+import { BottleneckChart } from './components/dosen/BottleneckChart';
+import { RiskScatterPlot } from './components/dosen/RiskScatterPlot';
+import { DistributionCharts } from './components/dosen/DistributionCharts';
+import { MonthlyGuidanceTrendChart } from './components/dosen/MonthlyGuidanceTrendChart';
+import { ResearchClustersView } from './components/dosen/ResearchClustersView';
+import { ProgressTableView } from './components/dosen/ProgressTableView';
+import { ReviewModal } from './components/dosen/ReviewModal';
+import { VerifySKModal } from './components/dosen/VerifySKModal';
+import { EditDosenProfileModal } from './components/dosen/EditDosenProfileModal';
+import { ApplicantManagementView } from './components/dosen/ApplicantManagementView';
+import { AttendanceManagementView } from './components/dosen/AttendanceManagementView';
+import { PersonalDashboard } from './components/mahasiswa/PersonalDashboard';
+import { AttendanceView } from './components/mahasiswa/AttendanceView';
+import { UpdateProgressForm } from './components/mahasiswa/UpdateProgressForm';
+import { LogBimbinganView } from './components/mahasiswa/LogBimbinganView';
+import { ChangeTitleModal } from './components/mahasiswa/ChangeTitleModal';
+import { ChangePasswordModal } from './components/mahasiswa/ChangePasswordModal';
+import { UploadSKModal } from './components/mahasiswa/UploadSKModal';
+import { ApplyGuidanceModal } from './components/public/ApplyGuidanceModal';
+import { EditProfileModal, StudentProfileUpdatePayload } from './components/mahasiswa/EditProfileModal';
+import { LoginScreen } from './components/auth/LoginScreen';
+import { ReviewQueueView } from './components/dosen/ReviewQueueView';
+const LOCAL_STORAGE_KEY_AUTH = 'skripsitrack_auth_session_strict_v3';
+const LOCAL_STORAGE_KEY_DOSEN = 'skripsitrack_dosen_profile_syaifuddin_v3';
+const LOCAL_STORAGE_KEY_THESES = 'skripsitrack_theses_syaifuddin_v15_prod';
+const LOCAL_STORAGE_KEY_APPLICANTS = 'skripsitrack_applicants_syaifuddin_v15_prod';
 
 export default function App() {
   // Session Authentication State (Protected Routes: null -> Halaman Login)
@@ -245,7 +245,7 @@ export default function App() {
 
   const pendingApplicantsCount = applicants.filter(a => a.status === 'Pending').length;
   const pendingTitlesCount = titleChangeRequests.filter(t => t.status === 'Pending').length;
-
+  const pendingReviewCount = theses.filter(t => t.logs?.[0]?.status === 'Menunggu Review').length;
   // LOGIN HANDLER: Directs to /dosen/dashboard or /mahasiswa/dashboard
   const handleLogin = (session: AuthSession) => {
     setAuthSession(session);
@@ -459,8 +459,9 @@ export default function App() {
     fileName: string;
     fileSize: string;
     notes?: string;
+    fileData?: string; // <--- 1. TAMBAHKAN BARIS INI
   }) => {
-    const today = '2026-10-22';
+    const today = new Date().toISOString().split('T')[0]; // Gunakan tanggal dinamis
     setTheses(prev => prev.map(t => {
       if (t.id !== currentStudent.id) return t;
       return {
@@ -468,6 +469,7 @@ export default function App() {
         skNumber: data.skNumber,
         skDate: data.skDate,
         skFileName: data.fileName,
+        skFileUrl: data.fileData, // <--- 2. SIMPAN BASE64 KE skFileUrl
         skUploadDate: today,
         skVerificationStatus: 'Menunggu Verifikasi',
         skStatus: 'Belum SK',
@@ -830,6 +832,7 @@ export default function App() {
         pendingApplicantsCount={pendingApplicantsCount}
         pendingTitlesCount={pendingTitlesCount}
         pendingAttendanceCount={pendingAttendanceCount}
+        pendingReviewCount={pendingReviewCount}
       />
 
       {/* Main Content Area (Protected views by current authenticated role) */}
@@ -840,6 +843,12 @@ export default function App() {
            ======================================================== */}
         {currentRole === 'dosen' && (
           <>
+            {activeTab === 'review-queue' && (
+  <ReviewQueueView
+    theses={theses}
+    onOpenReviewModal={(t) => setReviewingThesis(t)}
+  />
+)}
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
                 {/* Dosen Profile Summary Banner (Single-Tenant Master) */}

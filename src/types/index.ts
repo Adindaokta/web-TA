@@ -63,6 +63,7 @@ export interface LogEntry {
   status: LogStatus;
   reviewedAt?: string;
   version: number;
+  fileData?: string; // TAMBAHKAN BARIS INI (PENTING!)
 }
 
 export interface Milestone {

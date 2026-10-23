@@ -8,7 +8,8 @@ import {
   Info,
   Send,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 import { Thesis } from '../../types/index.ts';
 
@@ -16,13 +17,7 @@ interface UploadSKModalProps {
   isOpen: boolean;
   onClose: () => void;
   thesis: Thesis;
-  onSubmitSK: (data: {
-    skNumber: string;
-    skDate: string;
-    fileName: string;
-    fileSize: string;
-    notes?: string;
-  }) => void;
+  onSubmitSK: (data: { skNumber: string; skDate: string; fileName: string; fileSize: string; notes?: string; fileData?: string }) => void;
 }
 
 export const UploadSKModal: React.FC<UploadSKModalProps> = ({
@@ -40,17 +35,20 @@ export const UploadSKModal: React.FC<UploadSKModalProps> = ({
     thesis.skDate || new Date().toISOString().split('T')[0]
   );
   const [notes, setNotes] = useState('');
-  const [selectedFile, setSelectedFile] = useState<{ name: string; size: string } | null>({
-    name: `SK_TugasAkhir_${thesis.nim}_${thesis.studentName.replace(/\s+/g, '_')}.pdf`,
-    size: '1.2 MB'
-  });
+  
+  // PERBAIKAN: Pisahkan File fisik dan Detail teks
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileDetail, setFileDetail] = useState<{ name: string; size: string } | null>(null);
+  
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-      setSelectedFile({
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      
+      setSelectedFile(file); // 1. Simpan objek File asli (Menghilangkan error FileReader)
+      setFileDetail({        // 2. Simpan teks untuk tampilan antarmuka
         name: file.name,
         size: `${sizeMB} MB`
       });
@@ -59,21 +57,34 @@ export const UploadSKModal: React.FC<UploadSKModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!skNumber.trim() || !selectedFile) return;
+    if (!selectedFile || !fileDetail) {
+      alert("Harap unggah berkas PDF SK terlebih dahulu!");
+      return;
+    }
 
-    onSubmitSK({
-      skNumber: skNumber.trim(),
-      skDate,
-      fileName: selectedFile.name,
-      fileSize: selectedFile.size,
-      notes: notes.trim()
-    });
-
-    setIsSuccess(true);
-    setTimeout(() => {
-      setIsSuccess(false);
-      onClose();
-    }, 1200);
+    // BACA FILE PDF SK ASLI
+    const reader = new FileReader();
+    reader.readAsDataURL(selectedFile); // Sekarang selectedFile benar-benar tipe 'File', garis merah hilang!
+    
+    reader.onload = () => {
+      const fileBase64 = reader.result as string;
+      
+      // Kirim data ke fungsi utama, pastikan menyertakan fileBase64
+      onSubmitSK({
+        skNumber: skNumber,
+        skDate: skDate,
+        fileName: fileDetail.name,
+        fileSize: fileDetail.size,
+        notes: notes,
+        fileData: fileBase64 
+      });
+      
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsSuccess(false);
+        onClose();
+      }, 1500);
+    };
   };
 
   return (
@@ -99,7 +110,7 @@ export const UploadSKModal: React.FC<UploadSKModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition"
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -188,7 +199,9 @@ export const UploadSKModal: React.FC<UploadSKModalProps> = ({
                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 />
                 <div className="flex flex-col items-center justify-center space-y-1.5 pointer-events-none">
-                  <UploadCloud className="h-6 w-6 text-indigo-600" />
+                  <div className="p-2 bg-white rounded-full shadow-xs text-indigo-600">
+                    <UploadCloud className="h-5 w-5" />
+                  </div>
                   <span className="font-semibold text-slate-700 text-xs">
                     Klik atau seret berkas PDF SK ke sini
                   </span>
@@ -198,16 +211,24 @@ export const UploadSKModal: React.FC<UploadSKModalProps> = ({
                 </div>
               </div>
 
-              {selectedFile && (
+              {fileDetail && (
                 <div className="p-2.5 bg-indigo-50/80 border border-indigo-200 rounded-xl flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-indigo-600" />
-                    <span className="font-bold text-slate-800 truncate max-w-[280px]">{selectedFile.name}</span>
-                    <span className="text-[11px] text-slate-500">({selectedFile.size})</span>
+                    <span className="font-bold text-slate-800 truncate max-w-[200px] sm:max-w-[280px]">{fileDetail.name}</span>
+                    <span className="text-[11px] text-slate-500">({fileDetail.size})</span>
                   </div>
-                  <span className="text-[10px] font-bold text-indigo-700 bg-white px-2 py-0.5 rounded border border-indigo-200">
-                    Siap Kirim
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setFileDetail(null);
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md transition cursor-pointer"
+                    title="Hapus berkas terpilih"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               )}
             </div>
@@ -231,14 +252,14 @@ export const UploadSKModal: React.FC<UploadSKModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition text-xs"
+                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition text-xs cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={!selectedFile || !skNumber.trim()}
-                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition"
+                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition cursor-pointer"
               >
                 <Send className="h-3.5 w-3.5" />
                 <span>Kirim Verifikasi SK</span>

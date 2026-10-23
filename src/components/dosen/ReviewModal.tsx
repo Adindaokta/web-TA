@@ -41,35 +41,23 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
     ? CHAPTER_ORDER[currentChapterIndex + 1]
     : undefined;
 
-  // Simulate downloading the draft file
-  const handleDownloadDraft = (fileName: string) => {
-    const sampleContent = `======================================================
-DOKUMEN DRAFT TUGAS AKHIR / SKRIPSI
-======================================================
-Judul: ${thesis.title}
-Mahasiswa: ${thesis.studentName} (NIM: ${thesis.nim})
-Tahap: ${thesis.currentChapter}
-Rumpun Riset: ${thesis.cluster}
-Dosen Pembimbing: Ir. Syaifuddin, S.Kom., M.Kom. (NIP. 10816120590PNS) - Informatika UMM
-Status SK: ${thesis.skStatus}
-Durasi Bimbingan: ${thesis.durationMonths} Bulan
-
-Ringkasan Catatan Pengajuan:
-"${latestLog?.studentNotes || 'Pengajuan draft rutin untuk review kemajuan penulisan skripsi.'}"
-======================================================
-[Simulasi file ${fileName} berhasil diunduh dari sistem SIM-TA]
-`;
-    const blob = new Blob([sampleContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName.endsWith('.pdf') ? fileName.replace('.pdf', '.txt') : fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  // --- FUNGSI UNDUHAN FILE UTUH (NATIVE BROWSER DOWNLOAD) ---
+  const handleDownloadDraft = (fileName: string, fileData?: string) => {
+    if (fileData) {
+      // 1. Eksekusi unduhan murni jika file data fisik (Base64) tersedia
+      const a = document.createElement('a');
+      a.href = fileData;
+      a.download = fileName;
+      
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      // 2. Tampilkan peringatan jika file tidak memiliki data fisik (Base64) 
+      //    (terjadi pada data dummy seeder awal)
+      alert(`[ERROR] File fisik dari dokumen "${fileName}" tidak ditemukan dalam sistem lokal. Hal ini biasanya terjadi pada data bawaan simulasi. \n\nSilakan instruksikan mahasiswa untuk mengunggah ulang dokumen dari komputernya menggunakan form Update Progres.`);
+    }
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!feedbackText.trim()) return;
@@ -182,13 +170,14 @@ Ringkasan Catatan Pengajuan:
                 </div>
 
                 <button
-                  type="button"
-                  onClick={() => handleDownloadDraft(latestLog.fileName)}
-                  className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs transition shrink-0"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  <span>Unduh Dokumen</span>
-                </button>
+  type="button"
+  // PASTIKAN BARIS INI BENAR:
+  onClick={() => handleDownloadDraft(latestLog.fileName, latestLog.fileData)} 
+  className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs transition shrink-0"
+>
+  <Download className="h-3.5 w-3.5" />
+  <span>Unduh Dokumen</span>
+</button>
               </div>
             ) : (
               <p className="text-xs text-slate-500 italic">

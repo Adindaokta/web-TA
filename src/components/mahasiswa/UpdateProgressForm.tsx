@@ -8,7 +8,6 @@ import {
   Newspaper, 
   Award, 
   Trash2,
-  ExternalLink,
   Layers,
   FileCheck2,
   AlertTriangle
@@ -31,9 +30,20 @@ export const UpdateProgressForm: React.FC<UpdateProgressFormProps> = ({
   const [selectedTrack, setSelectedTrack] = useState<GraduationTrack>(thesis.graduationTrack || 'Skripsi');
 
   // Skripsi track state
-  const [selectedChapter, setSelectedChapter] = useState<ChapterStage>(
-    thesis.currentChapter === 'Belum Mulai' ? 'Bab 1' : thesis.currentChapter
-  );
+  // Skripsi track state (Otomatis naik bab jika log terakhir sudah ACC)
+  const [selectedChapter, setSelectedChapter] = useState<ChapterStage>(() => {
+    const latestLog = thesis.logs?.[0];
+    
+    // Jika log terakhir adalah 'Disetujui (ACC)', otomatis pilih Bab selanjutnya
+    if (latestLog && latestLog.status === 'Disetujui (ACC)') {
+      const currentIndex = CHAPTER_ORDER.indexOf(latestLog.chapter);
+      if (currentIndex >= 0 && currentIndex < CHAPTER_ORDER.length - 1) {
+        return CHAPTER_ORDER[currentIndex + 1];
+      }
+    }
+    
+    return thesis.currentChapter === 'Belum Mulai' ? 'Bab 1' : thesis.currentChapter;
+  });
 
   // Jurnal track state: 'Draft' | 'Submit' | 'Revisi' | 'Accepted/Published'
   const [selectedJournalStage, setSelectedJournalStage] = useState<JournalStage>(
@@ -46,22 +56,21 @@ export const UpdateProgressForm: React.FC<UpdateProgressFormProps> = ({
   const [journalReviewNotes, setJournalReviewNotes] = useState(thesis.journalReviewNotes || '');
 
   // Common Defense Status & Student Notes
-  const [selectedDefenseStatus, setSelectedDefenseStatus] = useState<DefenseStatus>(thesis.defenseStatus);
+  const [selectedDefenseStatus, setSelectedDefenseStatus] = useState<DefenseStatus>(thesis.defenseStatus || 'Belum Daftar');
   const [studentNotes, setStudentNotes] = useState('');
   
-  // Real file upload state (simulated PDF)
-  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: string } | null>({
-    name: selectedTrack === 'Skripsi'
-      ? `Draft_${selectedChapter.replace(' ', '')}_${thesis.studentName.replace(/\s+/g, '')}.pdf`
-      : `Artikel_Jurnal_${thesis.studentName.replace(/\s+/g, '')}.pdf`,
-    size: '2.8 MB'
-  });
+  // Real file upload state (Menyimpan objek file asli)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: string } | null>(null);
+  
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      
+      setSelectedFile(file); // Simpan file aslinya
       setUploadedFile({
         name: file.name,
         size: `${sizeMB} MB`
@@ -69,51 +78,65 @@ export const UpdateProgressForm: React.FC<UpdateProgressFormProps> = ({
     }
   };
 
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    setUploadedFile(null);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Wajib mengunggah file
+    if (!selectedFile) {
+      alert("Harap unggah berkas naskah PDF atau DOCX terlebih dahulu sebelum mengirim pembaruan.");
+      return;
+    }
 
-    const now = new Date();
-    const formattedDate = `${now.toISOString().split('T')[0]} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    // BACA FILE FISIK ASLI menjadi format Base64
+    const reader = new FileReader();
+    reader.readAsDataURL(selectedFile); 
+    
+    reader.onload = () => {
+      const fileBase64 = reader.result as string;
+      
+      const newLog = {
+        id: `log-${Date.now()}`,
+        thesisId: thesis.id,
+        
+        // UBAH BARIS INI: Tambahkan "as ChapterStage" di akhir tanda kurung
+        chapter: (selectedTrack === 'Jurnal' ? selectedJournalStage : selectedChapter) as ChapterStage,
+        
+        submissionDate: new Date().toISOString().split('T')[0],
+        fileName: selectedFile.name,
+        fileSize: `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`,
+        studentNotes: studentNotes,
+        status: 'Menunggu Review' as const,
+        fileData: fileBase64,
+        version: (thesis.logs?.length || 0) + 1
+      };
 
-    const newLogChapter: ChapterStage = selectedTrack === 'Skripsi' ? selectedChapter : 'Bab 5';
-    const logDesc = selectedTrack === 'Skripsi'
-      ? studentNotes.trim() || `Pengajuan perbaikan dan kemajuan penulisan untuk ${selectedChapter}.`
-      : studentNotes.trim() || `Pembaruan status manuskrip publikasi jurnal ke tahap: ${selectedJournalStage} (${journalName || 'Jurnal UMM'}).`;
+      const updatedThesis: Thesis = {
+        ...thesis,
+        graduationTrack: selectedTrack,
+        currentChapter: selectedTrack === 'Skripsi' ? selectedChapter : thesis.currentChapter,
+        journalStage: selectedTrack === 'Jurnal' ? selectedJournalStage : thesis.journalStage,
+        journalName: selectedTrack === 'Jurnal' ? journalName : thesis.journalName,
+        journalUrl: selectedTrack === 'Jurnal' ? journalUrl : thesis.journalUrl,
+        journalReviewNotes: selectedTrack === 'Jurnal' ? journalReviewNotes : thesis.journalReviewNotes,
+        defenseStatus: selectedDefenseStatus,
+        lastUpdate: new Date().toISOString().split('T')[0],
+        logs: [newLog, ...(thesis.logs || [])]
+      };
 
-    const newLog = {
-      id: `log-${Date.now()}`,
-      thesisId: thesis.id,
-      chapter: newLogChapter,
-      submissionDate: formattedDate,
-      fileName: uploadedFile?.name || (selectedTrack === 'Skripsi' ? `Draft_${selectedChapter}.pdf` : 'Naskah_Jurnal.pdf'),
-      fileSize: uploadedFile?.size || '2.4 MB',
-      studentNotes: logDesc,
-      status: 'Menunggu Review' as const,
-      version: (thesis.logs?.length || 0) + 1
+      onUpdateThesis(updatedThesis);
+      setIsSuccess(true);
+      
+      // Jeda sejenak agar mahasiswa bisa melihat pesan sukses
+      setTimeout(() => {
+        setIsSuccess(false);
+        onNavigateTab('logs');
+      }, 1500);
     };
-
-    const updatedThesis: Thesis = {
-      ...thesis,
-      graduationTrack: selectedTrack,
-      currentChapter: selectedTrack === 'Skripsi' ? selectedChapter : (selectedJournalStage === 'Accepted/Published' ? 'Pasca Sidang' : 'Bab 4'),
-      journalStage: selectedTrack === 'Jurnal' ? selectedJournalStage : undefined,
-      journalName: selectedTrack === 'Jurnal' ? (journalName.trim() || undefined) : undefined,
-      journalUrl: selectedTrack === 'Jurnal' ? (journalUrl.trim() || undefined) : undefined,
-      journalReviewNotes: selectedTrack === 'Jurnal' ? (journalReviewNotes.trim() || undefined) : undefined,
-      journalPaperFileName: selectedTrack === 'Jurnal' ? uploadedFile?.name : undefined,
-      defenseStatus: selectedDefenseStatus,
-      lastUpdate: now.toISOString().split('T')[0],
-      logs: [newLog, ...(thesis.logs || [])]
-    };
-
-    onUpdateThesis(updatedThesis);
-    setIsSuccess(true);
-    setStudentNotes('');
-
-    setTimeout(() => {
-      setIsSuccess(false);
-      onNavigateTab('logs');
-    }, 1200);
   };
 
   return (
@@ -293,7 +316,7 @@ export const UpdateProgressForm: React.FC<UpdateProgressFormProps> = ({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setUploadedFile(null)}
+                    onClick={clearSelectedFile}
                     className="text-slate-400 hover:text-rose-600 p-1"
                     title="Hapus file terpilih"
                   >
@@ -425,7 +448,7 @@ export const UpdateProgressForm: React.FC<UpdateProgressFormProps> = ({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setUploadedFile(null)}
+                    onClick={clearSelectedFile}
                     className="text-slate-400 hover:text-rose-600 p-1"
                     title="Hapus file terpilih"
                   >

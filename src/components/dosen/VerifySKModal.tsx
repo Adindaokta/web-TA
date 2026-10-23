@@ -40,40 +40,24 @@ export const VerifySKModal: React.FC<VerifySKModalProps> = ({
   const [isRejectMode, setIsRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
+  // --- FUNGSI UNDUH SK ASLI (NATIVE DOWNLOAD) ---
   const handleDownloadFile = () => {
-    const text = `======================================================
-SURAT KEPUTUSAN (SK) TUGAS AKHIR MAHASISWA
-DEKAN FAKULTAS TEKNIK - UNIVERSITAS MUHAMMADIYAH MALANG
-======================================================
-Nomor SK: ${skNumber}
-Tanggal Ditetapkan: ${skDate}
+    // skFileUrl adalah tempat kita menyimpan Base64 di App.tsx
+    const fileData = thesis.skFileUrl; 
+    const fileName = thesis.skFileName || `SK_TugasAkhir_${thesis.nim}.pdf`;
 
-Dosen Pembimbing:
-Nama: Ir. Syaifuddin S.Kom., M.Kom., IPM, ASEAN Eng
-NIP : 10816120590PNS
-Unit: Informatika UMM
-
-Mahasiswa Bimbingan:
-Nama: ${thesis.studentName}
-NIM : ${thesis.nim}
-Program Studi: Informatika
-Fakultas: Fakultas Teknik
-
-Judul Tugas Akhir:
-"${thesis.title}"
-Tanggal ACC Judul: ${thesis.approvedAt || '-'}
-======================================================
-[Simulasi berkas digital SK Tugas Akhir dari SIM-TA]`;
-
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = thesis.skFileName || `SK_TugasAkhir_${thesis.nim}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (fileData) {
+      // Unduh file PDF asli menggunakan Base64 yang tersimpan
+      const a = document.createElement('a');
+      a.href = fileData;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      // Jika SK di-upload sebelum fitur Base64 ditambahkan
+      alert(`[ERROR] File PDF fisik dari SK "${fileName}" belum tersimpan di memori. Ini terjadi karena ini adalah data dummy awal, atau mahasiswa mengunggah SK sebelum sistem di-update. \n\nSilakan tolak verifikasi ini agar mahasiswa mengunggah ulang file PDF SK-nya.`);
+    }
   };
 
   const handleApprove = (e: React.FormEvent) => {
@@ -161,7 +145,7 @@ Tanggal ACC Judul: ${thesis.approvedAt || '-'}
             <button
               type="button"
               onClick={handleDownloadFile}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer"
             >
               <Download className="h-3.5 w-3.5" />
               <span>Unduh PDF</span>
@@ -216,7 +200,7 @@ Tanggal ACC Judul: ${thesis.approvedAt || '-'}
               <button
                 type="button"
                 onClick={() => setIsRejectMode(true)}
-                className="text-rose-600 hover:text-rose-800 text-xs font-bold transition flex items-center gap-1"
+                className="text-rose-600 hover:text-rose-800 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
               >
                 <XCircle className="h-3.5 w-3.5" />
                 <span>Tolak Berkas SK</span>
@@ -226,13 +210,13 @@ Tanggal ACC Judul: ${thesis.approvedAt || '-'}
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition text-xs"
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition text-xs cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition"
+                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition cursor-pointer"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   <span>Verifikasi & Setujui SK</span>
@@ -265,14 +249,14 @@ Tanggal ACC Judul: ${thesis.approvedAt || '-'}
               <button
                 type="button"
                 onClick={() => setIsRejectMode(false)}
-                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition text-xs"
+                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition text-xs cursor-pointer"
               >
                 Kembali
               </button>
               <button
                 type="submit"
                 disabled={!rejectReason.trim()}
-                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-rose-600/20 transition"
+                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-rose-600/20 transition cursor-pointer"
               >
                 <XCircle className="h-3.5 w-3.5" />
                 <span>Konfirmasi Penolakan</span>

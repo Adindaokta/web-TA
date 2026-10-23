@@ -22,36 +22,21 @@ export const LogBimbinganView: React.FC<LogBimbinganViewProps> = ({
   thesis,
   onNavigateTab
 }) => {
+  // --- FUNGSI UNDUHAN FILE UTUH (SISI MAHASISWA) ---
   const handleDownloadFile = (fileName: string, log: LogEntry) => {
-    const content = `======================================================
-LOG BIMBINGAN TUGAS AKHIR / SKRIPSI
-======================================================
-Mahasiswa: ${thesis.studentName} (${thesis.nim})
-Tahap: ${log.chapter} (Versi #${log.version})
-Tanggal Pengajuan: ${log.submissionDate}
-Nama Berkas: ${fileName}
-Ukuran: ${log.fileSize}
-
-Catatan Mahasiswa:
-"${log.studentNotes}"
-
-Feedback Dosen Pembimbing:
-"${log.dosenFeedback || 'Belum ada catatan review.'}"
-
-Status: ${log.status}
-Tanggal Review: ${log.reviewedAt || 'Menunggu peninjauan'}
-======================================================
-[Simulasi file ${fileName} berhasil diunduh dari SIM-TA]
-`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName.endsWith('.pdf') ? fileName.replace('.pdf', '.txt') : fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (log.fileData) {
+      // Eksekusi unduhan murni jika file data fisik (Base64) tersedia
+      const a = document.createElement('a');
+      a.href = log.fileData;
+      a.download = fileName; // Ekstensi otomatis sesuai aslinya
+      
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      // Fallback untuk data simulasi bawaan (dummy)
+      alert(`[ERROR] File fisik dari dokumen "${fileName}" tidak ditemukan dalam sistem lokal karena ini adalah data bawaan simulasi. \n\nSilakan unggah dokumen yang baru melalui form Update Progres.`);
+    }
   };
 
   return (
@@ -74,7 +59,7 @@ Tanggal Review: ${log.reviewedAt || 'Menunggu peninjauan'}
 
         <button
           onClick={() => onNavigateTab('update')}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 transition self-start sm:self-auto shrink-0"
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 transition self-start sm:self-auto shrink-0 cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           <span>Upload Progres Baru</span>
@@ -151,8 +136,9 @@ Tanggal Review: ${log.reviewedAt || 'Menunggu peninjauan'}
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => handleDownloadFile(log.fileName, log)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-indigo-600 font-semibold border border-slate-200 shadow-2xs transition self-start sm:self-auto shrink-0"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-indigo-600 font-semibold border border-slate-200 shadow-2xs transition self-start sm:self-auto shrink-0 cursor-pointer"
                     >
                       <Download className="h-3.5 w-3.5" />
                       <span>Unduh File</span>

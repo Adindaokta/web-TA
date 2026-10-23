@@ -1,5 +1,5 @@
-import { DosenProfile, Thesis, Milestone, NewApplicant, ResearchCluster, ChapterStage, AttendanceRecord } from '../types/index.ts';
-import { calculateDurationMonths, calculateRiskLevel } from '../utils/rules.ts';
+import { DosenProfile, Thesis, Milestone, NewApplicant, ResearchCluster, ChapterStage, AttendanceRecord } from '../types/index';
+import { calculateDurationMonths, calculateRiskLevel } from '../utils/rules';
 
 export const CURRENT_DOSEN: DosenProfile = {
   id: 'dosen-syaifuddin',
@@ -70,40 +70,27 @@ export const standardMilestones = (currentChapter: string): Milestone[] => [
   }
 ];
 
-// Helper to deduce research cluster based on the 6 mandated research tracks
 export const deduceCluster = (title: string): ResearchCluster => {
   const t = title.toLowerCase();
 
-  // 1. Deep Reinforcement Learning
   if (t.includes('reinforcement') || t.includes('drl')) {
     return 'Deep Reinforcement Learning';
   }
-
-  // 2. Honeypot & Akuisisi Data
   if (t.includes('honeypot') || t.includes('brute force') || t.includes('brute-force') || t.includes('akuisisi') || t.includes('scanner') || t.includes('pemindai') || t.includes('forensic') || t.includes('forensik')) {
     return 'Honeypot & Akuisisi Data';
   }
-
-  // 3. Dataset & Rekayasa Fitur
   if (t.includes('dataset') || t.includes('rekayasa fitur') || t.includes('seleksi fitur') || t.includes('reduksi fitur') || t.includes('smote') || t.includes('adasyn') || t.includes('tshark') || t.includes('cicflowmeter') || t.includes('trafik normal') || t.includes('pembagian data')) {
     return 'Dataset & Rekayasa Fitur';
   }
-
-  // 4. Machine Learning & Zero-Day
   if (t.includes('zero-day') || t.includes('zero day') || t.includes('xgboost') || t.includes('lightgbm') || t.includes('optuna') || t.includes('autoencoder') || t.includes('isolation forest') || t.includes('random forest') || t.includes('knn') || t.includes('svm') || t.includes('klasifikasi multikelas') || t.includes('phising')) {
     return 'Machine Learning & Zero-Day';
   }
-
-  // 5. Edge, Mitigasi & Kajian
   if (t.includes('gateway') || t.includes('mitigasi') || t.includes('snort') || t.includes('suricata') || t.includes('deauthentication') || t.includes('icmp') || t.includes('amplifikasi') || t.includes('coap') || t.includes('mqtt') || t.includes('kajian literatur')) {
     return 'Edge, Mitigasi & Kajian';
   }
-
-  // 6. Topik Implementatif Dasar (Kriptografi, DevSecOps, App Web, Steganografi, Dasar)
   return 'Topik Implementatif Dasar';
 };
 
-// 1. GRUP 1: Judul APPROVED tgl 16 Oktober 2026, BELUM SK (2 Mahasiswa)
 const GRUP_1_APPROVED_OCT_16 = [
   {
     name: 'Adinda Okta Rubiyanti',
@@ -117,11 +104,10 @@ const GRUP_1_APPROVED_OCT_16 = [
     nim: '202310370311438',
     title: 'ANALISIS MEKANISME STEGANOGRAFI LSB dan PROSES ENKRIPSI-DEKRIPSI PAYLOAD pada FAVICON sebagai JALUR MASUK MALWARE BERBASIS WEB',
     cluster: 'Topik Implementatif Dasar' as ResearchCluster,
-    jalur: 'Jurnal' as const
+    jalur: 'Skripsi' as const
   }
 ];
 
-// 2. GRUP 2: Judul APPROVED tgl 21 Oktober 2026, BELUM SK (7 Mahasiswa)
 const GRUP_2_APPROVED_OCT_21 = [
   {
     name: 'Celvin Saputra',
@@ -135,7 +121,7 @@ const GRUP_2_APPROVED_OCT_21 = [
     nim: '202310370311239',
     title: 'Kajian literatur dataset publik untuk deteksi serangan DDoS pada IoT',
     cluster: 'Edge, Mitigasi & Kajian' as ResearchCluster,
-    jalur: 'Jurnal' as const
+    jalur: 'Skripsi' as const
   },
   {
     name: 'Raditya Tantra Arinanta',
@@ -156,7 +142,7 @@ const GRUP_2_APPROVED_OCT_21 = [
     nim: '202310370311250',
     title: 'Deteksi DDoS pada jaringan IoT menggunakan XGBoost dan LightGBM dengan interpretasi SHAP',
     cluster: 'Machine Learning & Zero-Day' as ResearchCluster,
-    jalur: 'Jurnal' as const
+    jalur: 'Skripsi' as const
   },
   {
     name: 'Ken Aryo B',
@@ -174,7 +160,6 @@ const GRUP_2_APPROVED_OCT_21 = [
   }
 ];
 
-// 3. GRUP 3: Sisa 26 Mahasiswa (Judul PENDING, BELUM SK, termasuk pendaftar ke-35 Jimmy Candra Prayoga)
 const GRUP_3_PENDING_SISA_26 = [
   {
     name: 'Ahmad Gustya Faris S',
@@ -195,7 +180,7 @@ const GRUP_3_PENDING_SISA_26 = [
     nim: '202310370311077',
     title: 'Rancang Bangun Web-Based Digital Forensic URL Analyzer Menggunakan Multi-Layer Detection Engine Terintegrasi Framework MITRE ATT&CK',
     cluster: 'Topik Implementatif Dasar' as ResearchCluster,
-    jalur: 'Jurnal' as const
+    jalur: 'Skripsi' as const
   },
   {
     name: 'Athaullah Rozan Hibrizi',
@@ -230,7 +215,7 @@ const GRUP_3_PENDING_SISA_26 = [
     nim: '202310370311200',
     title: 'Live Forensics dan Dead Forensics dalam Investigasi Serangan Brute Force SSH pada Server Linux: Analisis Artefak Media Penyimpanan dan Memori',
     cluster: 'Honeypot & Akuisisi Data' as ResearchCluster,
-    jalur: 'Jurnal' as const
+    jalur: 'Skripsi' as const
   },
   {
     name: 'Moch Farhan Fauzi',
@@ -258,7 +243,7 @@ const GRUP_3_PENDING_SISA_26 = [
     nim: '202310370311157',
     title: 'Klasifikasi Multikelas Jenis Serangan DDoS pada Dataset CICIoT 2023',
     cluster: 'Machine Learning & Zero-Day' as ResearchCluster,
-    jalur: 'Jurnal' as const
+    jalur: 'Skripsi' as const
   },
   {
     name: 'Muhammad Daffa Priyantana',
@@ -314,7 +299,7 @@ const GRUP_3_PENDING_SISA_26 = [
     nim: '202310370311040',
     title: 'Deteksi anomali DDoS tanpa label menggunakan Autoencoder dan Isolation Forest',
     cluster: 'Machine Learning & Zero-Day' as ResearchCluster,
-    jalur: 'Jurnal' as const
+    jalur: 'Skripsi' as const
   },
   {
     name: 'Slamet Hariyadi',
@@ -356,23 +341,20 @@ const GRUP_3_PENDING_SISA_26 = [
     nim: '202310370311146',
     title: 'Evaluasi Pengaruh Reduksi Fitur terhadap Efisiensi dan Kinerja Deteksi Intrusi pada Dataset CICIoT2023',
     cluster: 'Dataset & Rekayasa Fitur' as ResearchCluster,
-    jalur: 'Jurnal' as const
+    jalur: 'Skripsi' as const
   }
 ];
 
-// Helper builder function to create a pristine clean state student record (Strict 35 records)
 const buildStudent = (
   raw: { name: string; nim: string; title: string; cluster?: ResearchCluster; jalur?: 'Skripsi' | 'Jurnal' },
-  titleStatus: 'Approved' | 'Pending',
+  titleStatus: 'Approved' | 'Pending' | 'Perlu Revisi',
   approvedAt: string | null
 ): Thesis => {
   const cluster = raw.cluster || deduceCluster(raw.title);
   const duration = calculateDurationMonths(approvedAt, '2026-10-22');
-  const isJurnal = raw.jalur === 'Jurnal';
-  const currentChapter: ChapterStage = isJurnal ? 'Bab 1' : (titleStatus === 'Approved' ? 'Bab 1' : 'Belum Mulai');
+  const currentChapter: ChapterStage = titleStatus === 'Approved' ? 'Bab 1' : 'Belum Mulai';
   const risk = calculateRiskLevel(currentChapter, duration);
   
-  // Initials badge instead of dummy photos (Mandated: NO DUMMY PHOTOS)
   const avatar = raw.name
     .split(' ')
     .filter(Boolean)
@@ -381,7 +363,6 @@ const buildStudent = (
     .join('')
     .toUpperCase();
 
-  // Clean State: 0 dummy presensi records
   const initialAttendances: AttendanceRecord[] = [];
 
   return {
@@ -400,7 +381,6 @@ const buildStudent = (
     currentChapter,
     durationMonths: duration,
     startDate: approvedAt || '2026-10-22',
-    // MANDAT MUTLAK: Seluruh 35 mahasiswa pada Hari Ke-1 berstatus skStatus = 'Belum SK'
     skStatus: 'Belum SK',
     skNumber: undefined,
     skDate: undefined,
@@ -409,30 +389,24 @@ const buildStudent = (
     skUploadDate: undefined,
     skVerificationStatus: 'Belum Upload',
     defenseStatus: 'Belum Daftar',
-    // JALUR KELULUSAN (Skripsi vs Jurnal)
-    graduationTrack: isJurnal ? 'Jurnal' : 'Skripsi',
-    journalStage: isJurnal ? 'Draft' : undefined,
-    journalStatus: isJurnal ? 'Draft' : undefined,
-    journalName: isJurnal ? 'Jurnal Repositor (SINTA 2/3 Informatika UMM)' : undefined,
-    journalUrl: isJurnal ? 'https://repositor.umm.ac.id' : undefined,
+    graduationTrack: 'Skripsi',
+    journalStage: undefined,
+    journalStatus: undefined,
+    journalName: undefined,
+    journalUrl: undefined,
     lastUpdate: approvedAt || '2026-10-22',
     riskLevel: risk,
     mustChangePassword: true,
     milestones: standardMilestones(currentChapter),
     attendances: initialAttendances,
-    logs: [] // CLEAN STATE: Seluruh 35 mahasiswa log progres kosong di hari pertama!
+    logs: [] 
   };
 };
 
 export const INITIAL_THESES: Thesis[] = [
-  // 1. Grup 1 (Approved tgl 16 Oktober 2026, Belum SK) - 2 Mahasiswa
   ...GRUP_1_APPROVED_OCT_16.map((mhs) => buildStudent(mhs, 'Approved', '2026-10-16')),
-  // 2. Grup 2 (Approved tgl 21 Oktober 2026, Belum SK) - 7 Mahasiswa
   ...GRUP_2_APPROVED_OCT_21.map((mhs) => buildStudent(mhs, 'Approved', '2026-10-21')),
-  // 3. Grup 3 (Judul Pending, Belum SK) - 26 Mahasiswa (termasuk 35 Jimmy Candra Prayoga)
   ...GRUP_3_PENDING_SISA_26.map((mhs) => buildStudent(mhs, 'Pending', null))
 ];
 
-// Clean State: Belum ada pendaftar baru dari Landing Page sebelum digunakan
 export const INITIAL_APPLICANTS: NewApplicant[] = [];
-
