@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix SkripsiTrack - Sistem Informasi Monitoring Skripsi",
+  "description": "Sistem Informasi Monitoring Skripsi dan Tugas Akhir interaktif untuk Dosen Pembimbing dan Mahasiswa dengan visualisasi bottleneck, matriks risiko keterlambatan, klaster riset, dan log bimbingan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
