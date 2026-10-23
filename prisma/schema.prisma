@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// --- TABEL PENGGUNA (DOSEN & MAHASISWA) ---
+model User {
+  id        String   @id @default(uuid())
+  nim       String   @unique // Gunakan NIP untuk Dosen, NIM untuk Mahasiswa
+  name      String
+  email     String?
+  phone     String?
+  password  String
+  role      Role     @default(STUDENT)
+  
+  thesis       Thesis?
+  attendances  Attendance[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  STUDENT
+}
+
+// --- TABEL TUGAS AKHIR & JURNAL ---
+model Thesis {
+  id             String      @id @default(uuid())
+  userId         String      @unique
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title          String      @db.Text
+  titleStatus    TitleStatus @default(PENDING)
+  approvedAt     DateTime?
+  
+  researchTrack  String      // Honeypot, Dataset, dll atau custom "Lainnya"
+  graduationPath GradPath    @default(SKRIPSI)
+  
+  skStatus       SkStatus    @default(BELUM_SK)
+  skNumber       String?
+  skFileUrl      String?
+
+  progressLogs   ProgressLog[]
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum TitleStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum GradPath {
+  SKRIPSI
+  JURNAL
+}
+
+enum SkStatus {
+  BELUM_SK
+  SUDAH_SK
+}
+
+// --- TABEL LOG PROGRES BIMBINGAN ---
+model ProgressLog {
+  id          String    @id @default(uuid())
+  thesisId    String
+  thesis      Thesis    @relation(fields: [thesisId], references: [id], onDelete: Cascade)
+  
+  stage       String    // Misal: "Bab 1", "Bab 2" atau "Draft Jurnal"
+  fileUrl     String?
+  notes       String?   @db.Text
+  feedback    String?   @db.Text // Komentar dari Dosen
+  status      LogStatus @default(PENDING)
+  
+  createdAt   DateTime  @default(now())
+}
+
+enum LogStatus {
+  PENDING
+  APPROVED
+  REVISION
+}
+
+// --- TABEL PRESENSI BIMBINGAN ---
+model Attendance {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  date      DateTime
+  method    Method
+  topic     String    @db.Text
+  status    AttStatus @default(PENDING)
+  
+  createdAt DateTime  @default(now())
+}
+
+enum Method {
+  OFFLINE
+  ONLINE
+}
+
+enum AttStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}

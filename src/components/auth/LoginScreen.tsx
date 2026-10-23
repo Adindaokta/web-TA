@@ -56,8 +56,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       lower === 'dosen';
 
     if (isDosenNip) {
-      const expectedPassword = dosen.password || 'dosen123';
-      if (password !== expectedPassword && password !== 'dosen123' && password !== 'syaifuddin123') {
+      const expectedPassword = dosen.password || 'admin123';
+      
+      // UBAH BARIS INI: Hapus || password !== 'dosen123' dll
+      if (password !== expectedPassword) { 
         setError('Password Dosen yang Anda masukkan salah.');
         return;
       }
@@ -80,7 +82,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
     if (matchingStudent) {
       const expectedPassword = matchingStudent.password || 'bimbingan123';
-      if (password !== expectedPassword && password !== 'bimbingan123') {
+      
+      // UBAH BARIS INI: Hapus && password !== 'bimbingan123'
+      if (password !== expectedPassword) {
         setError('Password Mahasiswa yang Anda masukkan salah.');
         return;
       }
